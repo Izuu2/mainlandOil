@@ -89,8 +89,7 @@
 
     .section-page {
       margin-top: 2rem;
-      background: #fff;
-      padding: 2rem;
+      padding: 0.75rem 1.5rem;
       border-radius: 10px;
       border: 1px solid #ddd;
       max-width: 600px;
@@ -388,7 +387,6 @@
         company: document.getElementById("pms-company").value,
         truck: document.getElementById("pms-truck").value,
         dpr: document.getElementById("pms-dpr").value,
-        email: document.getElementById("pms-email").value
       };
     });
   });
@@ -556,7 +554,6 @@ async function submitOrder() {
       company: document.getElementById("pms-company").value,
       truckNumber: document.getElementById("pms-truck").value,
       dprCode: document.getElementById("pms-dpr").value,
-      email: document.getElementById("pms-email").value
     };
   }
 
@@ -607,3 +604,4 @@ document.getElementById("submit-order").addEventListener("click", submitOrder);
   </script>
 </body>
 </html>
+
