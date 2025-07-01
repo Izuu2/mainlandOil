@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Local Price Approval Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f7f7f7;
+    }
+
+    .navbar {
+      background-color: #003366;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar h2 {
+      margin: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .nav-link.active {
+      text-decoration: underline;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .section {
+      display: none;
+      margin-top: 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    input[type="number"], input[type="text"] {
+      width: 200px;
+      padding: 5px;
+      margin: 5px 0;
+    }
+
+    button {
+      padding: 6px 12px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 4px;
+      width: 600px;
+    }
+
+    .alert {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    li {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <h2>Admin Dashboard</h2>
+    <span id="role-info" style="font-size: 14px;"></span>
+    <div class="nav-links">
+      <a class="nav-link active" data-section="dashboard">Dashboard</a>
+      <a class="nav-link" data-section="update">Update Prices</a>
+      <a class="nav-link" data-section="approvals">Pending Approvals</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Dashboard Section -->
+    <div id="dashboard-section" class="section active">
+      <h3>Welcome to the Price Management Dashboard</h3>
+      <p>Use the navigation above to update prices or review approval requests.</p>
+    </div>
+
+    <!-- Update Prices Section -->
+    <div id="update-section" class="section">
+      <h3>Submit New Prices</h3>
+      <form id="price-update-form" style="display: none;">
+        <label>PMS Price: ₦<input type="number" id="new-pms-price" required></label><br>
+        <label>Lube 1L: ₦<input type="number" id="new-lube1-price" required></label><br>
+        <label>Lube 4L: ₦<input type="number" id="new-lube4-price" required></label><br>
+        <label>Lube 25L: ₦<input type="number" id="new-lube25-price" required></label><br>
+        <label>Reason: <input type="text" id="update-reason" required></label><br><br>
+        <button type="submit">Submit</button>
+      </form>
+      <div id="price-update-message"></div>
+    </div>
+
+    <!-- Pending Approvals Section -->
+    <div id="approvals-section" class="section">
+      <h3>Pending Approvals</h3>
+      <ul id="pending-approvals-list"></ul>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="approval-modal">
+    <div class="modal-content">
+      <div id="approval-details"></div>
+      <br>
+      <button onclick="approveChanges()">Approve</button>
+      <button onclick="rejectChanges()">Reject</button>
+      <button onclick="closeModal('approval-modal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Firebase + Dashboard Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
+    import { getDatabase, ref, set, get, child, update, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7f2veV58RQ7-VbvuGbvSSpE3hA2oy3tk",
+      authDomain: "mainland-7305d.firebaseapp.com",
+      databaseURL: "https://mainland-7305d-default-rtdb.firebaseio.com",
+      projectId: "mainland-7305d",
+      storageBucket: "mainland-7305d.firebasestorage.app",
+      messagingSenderId: "59142906902",
+      appId: "1:59142906902:web:cad4aa0eca4a1be8448137",
+      measurementId: "G-PG8CYTZ8DF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const analytics = getAnalytics(app);
+
+    let userRole = localStorage.getItem('userRole');
+    if (!userRole) {
+      userRole = prompt("Enter your role: 'admin' or 'superadmin'").toLowerCase();
+      if (userRole !== 'admin' && userRole !== 'superadmin') {
+        alert('Invalid role. Defaulting to admin.');
+        userRole = 'admin';
+      }
+      localStorage.setItem('userRole', userRole);
+    }
+
+    const isSuperAdmin = userRole === 'superadmin';
+    document.getElementById('role-info').textContent = `Logged in as: ${userRole.toUpperCase()}`;
+
+ if (userRole === 'admin' || userRole === 'superadmin') {
+  document.getElementById('price-update-form').style.display = 'block';
+}
+
+
+    function showMessage(msg, type) {
+      const el = document.getElementById('price-update-message');
+      el.textContent = msg;
+      el.className = `alert alert-${type}`;
+      el.style.display = 'block';
+    }
+
+    async function getCurrentPrice(productKey) {
+      const snapshot = await get(ref(db, 'prices'));
+      const prices = snapshot.val() || {
+        pms: 650,
+        lubricant: { '1': 1200, '4': 4500, '25': 18000 }
+      };
+      return productKey === 'pms' ? prices.pms : prices.lubricant[productKey.split('/')[1]] || 0;
+    }
+
+    async function savePrices(prices) {
+      await set(ref(db, 'prices'), prices);
+    }
+
+    function loadPendingApprovals() {
+      const list = document.getElementById('pending-approvals-list');
+      onValue(ref(db, 'price_approvals'), (snapshot) => {
+        const approvals = snapshot.val();
+        list.innerHTML = '';
+        if (!approvals) return;
+        for (const id in approvals) {
+          const approval = approvals[id];
+          if (approval.status === 'pending') {
+            const li = document.createElement('li');
+            li.innerHTML = `${approval.requestedByEmail} - ${new Date(approval.timestamp).toLocaleString()}
+              <button onclick="reviewApproval('${id}')">Review</button>`;
+            list.appendChild(li);
+          }
+        }
+      });
+    }
+
+    window.reviewApproval = async (id) => {
+      const snapshot = await get(ref(db, `price_approvals/${id}`));
+      const approval = snapshot.val();
+      window.currentApprovalId = id;
+      const detailsEl = document.getElementById('approval-details');
+      const lubeRows = await Promise.all(Object.entries(approval.newPrices.lubricant).map(async ([size, price]) => {
+        const current = await getCurrentPrice(`lubricant/${size}`);
+        return `<tr>
+          <td>Lube ${size}L</td>
+          <td>₦${current}</td>
+          <td>₦${price}</td>
+          <td style="color:${price > current ? 'red' : 'green'}">${price > current ? '↑' : '↓'} ${Math.abs(price - current)}</td>
+        </tr>`;
+      }));
+      const pms = approval.newPrices.pms;
+      const currentPMS = await getCurrentPrice('pms');
+      const modal = document.getElementById('approval-modal');
+      modal.style.display = 'flex';
+      detailsEl.innerHTML = `
+        <p><strong>Requested By:</strong> ${approval.requestedByEmail}</p>
+        <p><strong>Requested At:</strong> ${new Date(approval.timestamp).toLocaleString()}</p>
+        <p><strong>Reason:</strong> ${approval.reason}</p>
+        <h4>Proposed Changes:</h4>
+        <table>
+          <thead><tr><th>Product</th><th>Current</th><th>New</th><th>Change</th></tr></thead>
+          <tbody>
+            ${lubeRows.join('')}
+            <tr>
+              <td>PMS</td>
+              <td>₦${currentPMS}</td>
+              <td>₦${pms}</td>
+              <td style="color:${pms > currentPMS ? 'red' : 'green'}">${pms > currentPMS ? '↑' : '↓'} ${Math.abs(pms - currentPMS)}</td>
+            </tr>
+          </tbody>
+        </table>`;
+      modal.querySelector('button[onclick="approveChanges()"]').style.display = isSuperAdmin ? 'inline-block' : 'none';
+      modal.querySelector('button[onclick="rejectChanges()"]').style.display = isSuperAdmin ? 'inline-block' : 'none';
+    };
+
+    window.approveChanges = async () => {
+      const snapshot = await get(ref(db, `price_approvals/${currentApprovalId}`));
+      const approval = snapshot.val();
+      await savePrices(approval.newPrices);
+      await update(ref(db, `price_approvals/${currentApprovalId}`), { status: 'approved' });
+      showMessage('Approved and applied!', 'success');
+      closeModal('approval-modal');
+    };
+
+    window.rejectChanges = async () => {
+      await update(ref(db, `price_approvals/${currentApprovalId}`), { status: 'rejected' });
+      showMessage('Changes rejected.', 'success');
+      closeModal('approval-modal');
+    };
+
+    window.closeModal = (id) => {
+      document.getElementById(id).style.display = 'none';
+    };
+
+ document.getElementById('price-update-form').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const pms = parseFloat(document.getElementById('new-pms-price').value);
+  const l1 = parseFloat(document.getElementById('new-lube1-price').value);
+  const l4 = parseFloat(document.getElementById('new-lube4-price').value);
+  const l25 = parseFloat(document.getElementById('new-lube25-price').value);
+  const reason = document.getElementById('update-reason').value;
+  const newPrices = { pms, lubricant: { '1': l1, '4': l4, '25': l25 } };
+
+  if (userRole === 'superadmin') {
+    // Apply immediately (no approval)
+    await savePrices(newPrices);
+    showMessage('Prices updated directly by Superadmin.', 'success');
+  } else {
+    // Admins: submit for approval
+    const approvalId = `approval_${Date.now()}`;
+    await set(ref(db, `price_approvals/${approvalId}`), {
+      requestedByEmail: 'test@example.com',
+      newPrices,
+      reason,
+      status: 'pending',
+      timestamp: new Date().toISOString()
+    });
+    showMessage('Approval request submitted.', 'success');
+    loadPendingApprovals();
+  }
+
+  this.reset();
+});
+
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        const section = link.getAttribute('data-section');
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById(`${section}-section`).classList.add('active');
+      });
+    });
+
+    loadPendingApprovals();
+  </script>
+
+</body>
+</html>
+

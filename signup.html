@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up</title>
+  <link rel="stylesheet" href="assets/CSS/user-access.css">
+  <link rel="stylesheet" href="assets/CSS/header.css">
+</head>
+<body>
+  <header>
+    <img src="assets/images/Mainland LOGO with text under- 326x154.png" alt="Company Logo" class="logo">
+    <div class="site-title">Sign Up</div>
+    <div class="frame-line-top-left"></div>
+    <div class="frame-line-top-right"></div>
+    <div class="frame-line-vertical-left"></div>
+    <div class="frame-line-vertical-right"></div>
+  </header>
+
+  <nav>
+    <div class="menu-toggle" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="#">Home</a>
+      <a href="#">FAQs</a>
+      <a href="#">Corporate Website</a>
+      <a href="#">Policies</a>
+      <a href="#">Contact us</a>
+    </div>
+  </nav>
+
+  <div class="body">
+    <h2>Create Account</h2>
+    <input type="text" id="signup-username" placeholder="Username" required />
+    <input type="email" id="signup-email" placeholder="Email" required />
+    <input type="password" id="signup-password" placeholder="Password" required />
+    <input type="password" id="signup-confirm" placeholder="Confirm Password" required />
+    <div id="password-strength"></div>
+    <button onclick="signup()">Sign Up</button>
+    <p>Already have an account? <a href="login.html">Login here</a></p>
+    <div class="message" id="signup-message"></div>
+  </div>
+
+  <footer>
+    &copy; 2025 Mainland Oil and Gas. All rights reserved.
+  </footer>
+
+  <!-- Firebase SDKs (loaded from CDN) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword,
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Your Firebase config (replace with your actual config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPhMXOil0T4TuRZcnhFhKDNXz8UfD5j0g",
+      authDomain: "mainland-oil-gas.firebaseapp.com",
+      projectId: "mainland-oil-gas",
+      storageBucket: "mainland-oil-gas.appspot.com",
+      messagingSenderId: "777899969990",
+      appId: "1:777899969990:web:659db45ddc039d957776c7",
+      measurementId: "G-9F978V6EH0"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Make functions globally available (for onclick attributes)
+    window.signup = async function() {
+      const username = document.getElementById("signup-username").value.trim();
+      const email = document.getElementById("signup-email").value.trim();
+      const password = document.getElementById("signup-password").value;
+      const confirm = document.getElementById("signup-confirm").value;
+      const message = document.getElementById("signup-message");
+
+      if (!username || !email || !password || !confirm) {
+        message.textContent = "All fields are required.";
+        return;
+      }
+
+      if (password !== confirm) {
+        message.textContent = "Passwords do not match.";
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+          username,
+          email,
+          createdAt: serverTimestamp()
+        });
+        message.textContent = "Account created! Redirecting...";
+        setTimeout(() => window.location.href = 'dashboard.html', 2000);
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    };
+
+    // Redirect if already logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) window.location.href = 'dashboard.html';
+    });
+  </script>
+
+  <!-- Menu toggle script (non-module) -->
+  <script>
+    function toggleMenu() {
+      const navLinks = document.getElementById('navLinks');
+      navLinks.classList.toggle('active');
+    }
+  </script>
+</body>
+</html>

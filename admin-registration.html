@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register Admin | Mainland Oil & Gas</title>
+  <script type="module">
+    // Import Firebase modules using your configuration
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword,
+      sendEmailVerification 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { 
+      getDatabase, 
+      ref, 
+      set 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPhMXOil0T4TuRZcnhFhKDNXz8UfD5j0g",
+      authDomain: "mainland-oil-gas.firebaseapp.com",
+      databaseURL: "https://mainland-oil-gas-default-rtdb.firebaseio.com",
+      projectId: "mainland-oil-gas",
+      storageBucket: "mainland-oil-gas.firebasestorage.app",
+      messagingSenderId: "777899969990",
+      appId: "1:777899969990:web:659db45ddc039d957776c7",
+      measurementId: "G-9F978V6EH0"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // Registration function
+    window.registerAdmin = async function() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const isSuperAdmin = document.getElementById('super-admin').checked;
+      const messageEl = document.getElementById('message');
+
+      try {
+        // 1. Create the user account
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // 2. Add admin privileges to Realtime Database
+        await set(ref(db, `admins/${userCredential.user.uid}`), {
+          email: email,
+          isSuperAdmin: isSuperAdmin,
+          createdAt: new Date().toISOString(),
+          status: "active"
+        });
+
+        // 3. Send verification email
+        await sendEmailVerification(userCredential.user, {
+          url: 'https://yourdomain.com/admin-dashboard'
+        });
+
+        messageEl.innerHTML = `
+          <div style="color: green; padding: 10px; background: #e8f5e9; border-radius: 4px;">
+            ✅ Admin registered successfully!<br>
+            Verification email sent to ${email}
+          </div>
+        `;
+
+        // Clear form
+        document.getElementById('registration-form').reset();
+        
+      } catch (error) {
+        messageEl.innerHTML = `
+          <div style="color: red; padding: 10px; background: #ffebee; border-radius: 4px;">
+            ❌ Error: ${error.message}
+          </div>
+        `;
+        console.error("Registration error:", error);
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    input[type="email"], 
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #ee1e26;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin: 15px 0;
+    }
+    #super-admin {
+      width: auto;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Register New Admin</h2>
+  <form id="registration-form" onsubmit="event.preventDefault(); registerAdmin();">
+    <div class="form-group">
+      <label for="email">Admin Email:</label>
+      <input type="email" id="email" required placeholder="admin@mainland.com">
+    </div>
+    
+    <div class="form-group">
+      <label for="password">Password (min 6 characters):</label>
+      <input type="password" id="password" required minlength="6">
+    </div>
+    
+    <div class="checkbox-group">
+      <input type="checkbox" id="super-admin">
+      <label for="super-admin">Super Admin Privileges</label>
+    </div>
+    
+    <button type="submit">Register Admin</button>
+  </form>
+  
+  <div id="message"></div>
+  
+  <div style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+    <h3>Security Notes:</h3>
+    <ul style="margin-top: 10px;">
+      <li>Passwords must be at least 6 characters</li>
+      <li>Super admins can register other admins</li>
+      <li>Verification email will be sent automatically</li>
+      <li>Access is logged in Firebase Audit Log</li>
+    </ul>
+  </div>
+</body>
+</html>

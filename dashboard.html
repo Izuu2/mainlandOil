@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Mainland Oil & Gas</title>
+  <link rel="stylesheet" href="assets/CSS/header.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    #dashboard-view {
+      padding: 2rem;
+      max-width: 960px;
+      margin: auto;
+      text-align: center;
+    }
+
+    #dashboard-view h1 {
+      color: #ee1e26;
+      font-size: 2.5rem;
+      margin-bottom: 0.2rem;
+    }
+
+    #dashboard-view p {
+      font-size: 1.2rem;
+      color: #666;
+    }
+
+    .price-cards {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background: white;
+      border: 2px solid #a7cd3a;
+      border-radius: 10px;
+      padding: 1.5rem;
+      width: 220px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h2 {
+      color: #a7cd3a;
+      margin-bottom: 1rem;
+    }
+
+    .card p {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+    }
+
+    button {
+      background-color: #ee1e26;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      margin: 1rem 0.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #c3141b;
+    }
+
+    .section-page {
+      margin-top: 2rem;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      display: none;
+    }
+
+    .section-page.active {
+      display: block;
+    }
+
+    .section-page label {
+      display: block;
+      margin: 1rem 0;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    .section-page input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    #cart-display {
+      margin-top: 1.5rem;
+      text-align: left;
+    }
+
+    #order-summary {
+      margin-top: 1.5rem;
+      background-color: #f4f4f4;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+
+    #confirmation-message {
+      text-align: center;
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 768px) {
+      .price-cards {
+        flex-direction: column;
+        align-items: center;
+      }
+      .card {
+        width: 90%;
+      }
+      button {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img
+      src="assets/images/Mainland LOGO with text under- 326x154.png"
+      alt="Company Logo"
+      class="logo"
+    />
+    <div class="site-title">Dashboard</div>
+    <div class="frame-line-top-left"></div>
+    <div class="frame-line-top-right"></div>
+    <div class="frame-line-vertical-left"></div>
+    <div class="frame-line-vertical-right"></div>
+  </header>
+
+  <nav>
+    <div class="menu-toggle" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="#">Home</a>
+      <a href="admin.html">Admin Portal</a>
+      <a href="#">FAQs</a>
+      <a href="#">Corporate Website</a>
+      <a href="#">Contact us</a>
+    </div>
+  </nav>
+
+  <!-- Admin access link -->
+  <div
+    id="admin-access"
+    style="display: none; text-align: center; margin: 10px 0"
+  >
+    <a
+      href="admin.html"
+      style="
+        background: #a7cd3a;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+      "
+      >Admin Portal</a
+    >
+  </div>
+
+  <div id="dashboard-view">
+    <h1>Welcome 👋</h1>
+    <p>Live Fuel & Lubricant Prices</p>
+
+    <div class="price-cards">
+      <div class="card">
+        <h2>PMS</h2>
+        <p id="pms-price">Loading...</p>
+      </div>
+      <div class="card">
+        <h2>Lubricants</h2>
+        <ul id="lubricant-prices">
+          <li>Loading...</li>
+        </ul>
+      </div>
+    </div>
+    <button id="order-pms" onclick="showPmsForm()">Order PMS</button>
+    <button id="order-lubricant" onclick="showLubricantForm()">Order Lubricant</button>
+  </div>
+  <!-- Order Forms Container -->
+  <div id="order-form-container" class="section-page"></div>
+  <div id="order-summary" class="section-page"></div>
+  <button id="submit-order" class="section-page" onclick="submitOrder()">
+    Submit Order
+  </button>
+  <button id="back-to-dashboard" style="display:none; margin: 1rem auto; display: block;" onclick="goBackToDashboard()">
+  ⬅ Back to Dashboard
+</button>
+  <div id="confirmation-message" class="section-page"></div>
+
+  <footer>&copy; 2025 Mainland Oil and Gas. All rights reserved.</footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      get,
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPhMXOil0T4TuRZcnhFhKDNXz8UfD5j0g",
+      authDomain: "mainland-oil-gas.firebaseapp.com",
+      databaseURL: "https://mainland-oil-gas-default-rtdb.firebaseio.com",
+      projectId: "mainland-oil-gas",
+      storageBucket: "mainland-oil-gas.appspot.com",
+      messagingSenderId: "777899969990",
+      appId: "1:777899969990:web:659db45ddc039d957776c7",
+      measurementId: "G-9F978V6EH0",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const firestore = getFirestore(app);
+    const auth = getAuth();
+
+    // Log connection status
+    const connectedRef = ref(db, ".info/connected");
+    onValue(connectedRef, (snap) => {
+      if (snap.val() === true) {
+        console.log("✅ Connected to Firebase");
+      } else {
+        console.log("❌ Disconnected from Firebase");
+      }
+    });
+
+    // Check if user is admin
+    async function checkAdminStatus(uid) {
+      try {
+        const snapshot = await get(ref(db, `admins/${uid}`));
+        return snapshot.exists();
+      } catch (error) {
+        console.error("Admin check failed:", error);
+        return false;
+      }
+    }
+
+    // Update UI based on admin status
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const isAdmin = await checkAdminStatus(user.uid);
+        if (isAdmin) {
+          document.getElementById("admin-access").style.display = "block";
+        }
+      }
+    });
+
+    let cart = {};
+    let currentOrderType = "";
+
+    // Load and display prices
+    function loadPrices() {
+      const pricesRef = ref(db, "prices");
+
+      onValue(
+        pricesRef,
+        (snapshot) => {
+          const prices = snapshot.val();
+          console.log("🔄 Received prices:", prices);
+          if (prices) {
+            // Update PMS price
+            const pmsElement = document.getElementById("pms-price");
+            if (pmsElement) {
+              pmsElement.textContent = `₦${prices.pms?.toLocaleString() || "N/A"}`;
+            }
+
+            // Update lubricants
+            const lubeList = document.getElementById("lubricant-prices");
+            if (lubeList) {
+              lubeList.innerHTML = "";
+
+              if (prices.lubricant && typeof prices.lubricant === "object") {
+                Object.entries(prices.lubricant).forEach(([size, price]) => {
+                  const li = document.createElement("li");
+                  li.textContent = `${size}L: ₦${price.toLocaleString()}`;
+                  lubeList.appendChild(li);
+                });
+              } else {
+                lubeList.innerHTML = "<li>No lubricant prices available</li>";
+              }
+            }
+          }
+        },
+        (error) => {
+          console.error("Error loading prices:", error);
+        }
+      );
+    }
+
+    // Show PMS Order Form
+   function showPmsForm() {
+    document.getElementById("dashboard-view").style.display = "none";
+  const container = document.getElementById("order-form-container");
+  const summary = document.getElementById("order-summary");
+  const submitBtn = document.getElementById("submit-order");
+  const confirmation = document.getElementById("confirmation-message");
+  document.getElementById("back-to-dashboard").style.display = "block";
+
+  currentOrderType = "pms";
+  cart = {}; // reset cart
+
+  summary.classList.remove("active");
+  submitBtn.classList.remove("active");
+  confirmation.classList.remove("active");
+
+  container.innerHTML = `
+    <h2>Order PMS</h2>
+    <label>Company Name: <input type="text" id="pms-company" required /></label><br>
+    <label>Quantity (L): <input type="number" id="pms-qty" min="10000" max="70000" required /></label><br>
+    <label>Truck Number: <input type="text" id="pms-truck" required /></label><br>
+    <label>DPR License Code: <input type="text" id="pms-dpr" required /></label><br>
+  `;
+
+  container.classList.add("active");
+
+  // Load price and validate
+  get(ref(db, "prices")).then((snapshot) => {
+    const prices = snapshot.val();
+    const qtyInput = document.getElementById("pms-qty");
+
+    qtyInput.addEventListener("input", () => {
+      const qty = parseFloat(qtyInput.value || 0);
+      if (qty < 10000 || qty > 70000) {
+        summary.innerHTML = "<p>⚠ Quantity must be between 10,000L and 70,000L.</p>";
+        summary.classList.add("active");
+        submitBtn.classList.remove("active");
+        return;
+      }
+
+      const total = qty * (prices.pms || 0);
+      summary.innerHTML = `<p><strong>Total Price:</strong> ₦${total.toLocaleString()}</p>`;
+      summary.classList.add("active");
+      submitBtn.classList.add("active");
+
+      cart = {
+        type: "pms",
+        quantity: qty,
+        company: document.getElementById("pms-company").value,
+        truck: document.getElementById("pms-truck").value,
+        dpr: document.getElementById("pms-dpr").value,
+        email: document.getElementById("pms-email").value
+      };
+    });
+  });
+}
+
+    // Show Lubricant Order Form
+function showLubricantForm() {
+  document.getElementById("dashboard-view").style.display = "none";
+  const container = document.getElementById("order-form-container");
+  const summary = document.getElementById("order-summary");
+  const submitBtn = document.getElementById("submit-order");
+  const confirmation = document.getElementById("confirmation-message");
+  document.getElementById("back-to-dashboard").style.display = "block";
+  currentOrderType = "lubricant";
+  cart = {}; // reset cart
+
+  summary.classList.remove("active");
+  submitBtn.classList.remove("active");
+  confirmation.classList.remove("active");
+
+  get(ref(db, "prices/lubricant")).then((snapshot) => {
+    const prices = snapshot.val();
+    const sizes = Object.keys(prices || {});
+
+    container.innerHTML = `
+      <h2>Order Lubricants</h2>
+      ${sizes.map(size => `
+        <div>
+          <label>${size}L @ ₦${prices[size]}:
+            <input type="number" id="lube-${size}" min="0" value="0" />
+          </label>
+          <button onclick="addToCart('${size}', ${prices[size]})">Add to Cart</button>
+        </div>
+      `).join('')}
+      <div id="cart-display" style="margin-top: 1rem;"></div>
+    `;
+    container.classList.add("active");
+  });
+}
+window.addToCart = function(size, price) {
+  const qty = parseInt(document.getElementById(`lube-${size}`).value, 10) || 0;
+  if (qty < 1) return;
+
+  cart[size] = { qty, price };
+  renderLubeCart();
+};
+function renderLubeCart() {
+  const display = document.getElementById("cart-display");
+  const summary = document.getElementById("order-summary");
+  const submitBtn = document.getElementById("submit-order");
+
+  const items = Object.entries(cart);
+  if (items.length === 0) {
+    display.innerHTML = "<p>No items in cart.</p>";
+    summary.classList.remove("active");
+    submitBtn.classList.remove("active");
+    return;
+  }
+
+  let total = 0;
+  display.innerHTML = "<h3>Cart:</h3><ul>" +
+    items.map(([size, { qty, price }]) => {
+      const itemTotal = qty * price;
+      total += itemTotal;
+      return `<li>${qty} x ${size}L = ₦${itemTotal.toLocaleString()}</li>`;
+    }).join('') + "</ul>";
+
+  summary.innerHTML = `<p><strong>Total Price:</strong> ₦${total.toLocaleString()}</p>`;
+  summary.classList.add("active");
+  submitBtn.classList.add("active");
+}
+window.goBackToDashboard = function () {
+  document.getElementById("dashboard-view").style.display = "block";
+  document.getElementById("order-form-container").classList.remove("active");
+  document.getElementById("order-summary").classList.remove("active");
+  document.getElementById("submit-order").classList.remove("active");
+  document.getElementById("confirmation-message").classList.remove("active");
+  document.getElementById("back-to-dashboard").style.display = "none";
+
+  cart = {};
+};
+
+    // Update cart and order summary
+    function updateCart(type, quantity, size = null) {
+      quantity = parseInt(quantity, 10);
+      if (isNaN(quantity) || quantity < 1) quantity = 1;
+
+      if (type === "pms") {
+        cart = { type: "pms", quantity };
+      } else if (type === "lubricant") {
+        if (!size) {
+          const select = document.getElementById("lubricant-type");
+          size = select ? select.value : null;
+          if (!size) return; // no size selected yet
+        }
+        cart = { type: "lubricant", size, quantity };
+      }
+      renderOrderSummary();
+    }
+
+    // Render order summary with prices and total
+    async function renderOrderSummary() {
+      const summary = document.getElementById("order-summary");
+      const submitBtn = document.getElementById("submit-order");
+      const confirmation = document.getElementById("confirmation-message");
+
+      confirmation.classList.remove("active");
+
+      if (!cart || !cart.type) {
+        summary.classList.remove("active");
+        submitBtn.classList.remove("active");
+        return;
+      }
+
+      let unitPrice = 0;
+      try {
+        const pricesSnapshot = await get(ref(db, "prices"));
+        const prices = pricesSnapshot.val();
+
+        if (cart.type === "pms") {
+          unitPrice = prices.pms || 0;
+        } else if (cart.type === "lubricant") {
+          unitPrice = prices.lubricant?.[cart.size] || 0;
+        }
+
+        const totalPrice = unitPrice * cart.quantity;
+
+        summary.innerHTML = `
+          <h3>Order Summary</h3>
+          <p><strong>Product:</strong> ${cart.type === "pms" ? "PMS" : `Lubricant ${cart.size}L`}</p>
+          <p><strong>Quantity:</strong> ${cart.quantity}</p>
+          <p><strong>Unit Price:</strong> ₦${unitPrice.toLocaleString()}</p>
+          <p><strong>Total:</strong> ₦${totalPrice.toLocaleString()}</p>
+        `;
+
+        summary.classList.add("active");
+        submitBtn.classList.add("active");
+      } catch (error) {
+        summary.innerHTML = "<p>Error loading prices. Please try again later.</p>";
+        submitBtn.classList.remove("active");
+      }
+    }
+
+    // Submit order to Firestore
+async function submitOrder() {
+   console.log("submitOrder called", cart);
+  if (!cart || !cart.type) {
+    alert("No order to submit!");
+    return;
+  }
+
+  // Get extra form values for PMS
+  let orderData = {
+    product: cart.type,
+    quantity: cart.quantity || 0,
+    size: cart.size || null,
+    status: "pending",
+    createdAt: new Date(),
+    userId: auth.currentUser ? auth.currentUser.uid : "guest"
+  };
+
+  if (cart.type === "pms") {
+    orderData = {
+      ...orderData,
+      company: document.getElementById("pms-company").value,
+      truckNumber: document.getElementById("pms-truck").value,
+      dprCode: document.getElementById("pms-dpr").value,
+      email: document.getElementById("pms-email").value
+    };
+  }
+
+  try {
+    await addDoc(collection(firestore, "orders"), orderData);
+
+    // Show success message
+    const confirmation = document.getElementById("confirmation-message");
+    confirmation.textContent = "✅ Thank you! Your order has been submitted successfully.";
+    confirmation.classList.add("active");
+
+    // Hide all other sections
+    document.getElementById("order-form-container").classList.remove("active");
+    document.getElementById("order-summary").classList.remove("active");
+    document.getElementById("submit-order").classList.remove("active");
+    document.getElementById("back-to-dashboard").style.display = "none";
+
+    // Reset cart
+    cart = {};
+    currentOrderType = "";
+
+    // After 5 seconds, redirect to dashboard
+    setTimeout(() => {
+      document.getElementById("dashboard-view").style.display = "block";
+      confirmation.classList.remove("active");
+    }, 5000);
+  } catch (error) {
+    alert("❌ Failed to submit order: " + error.message);
+  }
+}
+
+
+    // Toggle navigation menu for mobile
+    function toggleMenu() {
+      const navLinks = document.getElementById("navLinks");
+      navLinks.classList.toggle("active");
+    }
+
+    // Initialize page by loading prices
+    loadPrices();
+    window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("back-to-dashboard").style.display = "none";
+  document.getElementById("order-pms").addEventListener("click", showPmsForm);
+document.getElementById("order-lubricant").addEventListener("click", showLubricantForm);
+document.getElementById("submit-order").addEventListener("click", submitOrder);
+});
+
+  </script>
+</body>
+</html>

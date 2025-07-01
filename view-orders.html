@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Submitted Orders - Mainland Oil & Gas</title>
+  <style>
+    /* Keep your second code styles here */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    h1 {
+      color: #a7cd3a;
+      text-align: center;
+    }
+
+    #orders-container {
+      max-width: 800px;
+      margin: auto;
+      margin-top: 2rem;
+    }
+
+    .order-card {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-left: 6px solid #a7cd3a;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    .order-card p {
+      margin: 0.3rem 0;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+    }
+
+    /* Add accept/reject buttons */
+    .order-actions {
+      margin-top: 0.8rem;
+    }
+
+    .accept-btn, .decline-btn {
+      cursor: pointer;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-right: 0.5rem;
+      transition: background-color 0.3s ease;
+    }
+
+    .accept-btn {
+      background-color: #a7cd3a;
+      color: white;
+    }
+
+    .accept-btn:hover {
+      background-color: #8bb32d;
+    }
+
+    .decline-btn {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .decline-btn:hover {
+      background-color: #c0392b;
+    }
+
+    /* Accepted label */
+    .accepted-label {
+      color: green;
+      font-weight: bold;
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #d4edda;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Submitted Orders</h1>
+  <div id="orders-container" class="loading">Loading orders...</div>
+
+  <div style="max-width: 800px; margin: 2rem auto; text-align: center;">
+    <button id="toggle-theme-btn">🌗 Toggle Theme</button>
+    <button id="print-orders-btn">🖨️ Print Accepted Orders</button>
+    <button id="export-orders-btn">📁 Export to Excel (CSV)</button>
+  </div>
+
+  <div id="printAreaContainer" style="display:none;">
+    <h3>Accepted Orders (Print Format)</h3>
+    <table id="printArea" border="1" style="border-collapse: collapse; margin: auto;">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Size (L)</th>
+          <th>Company</th>
+          <th>Truck No</th>
+          <th>DPR Code</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      orderBy,
+      getDocs,
+      doc,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPhMXOil0T4TuRZcnhFhKDNXz8UfD5j0g",
+      authDomain: "mainland-oil-gas.firebaseapp.com",
+      projectId: "mainland-oil-gas",
+      storageBucket: "mainland-oil-gas.appspot.com",
+      messagingSenderId: "777899969990",
+      appId: "1:777899969990:web:659db45ddc039d957776c7",
+      measurementId: "G-9F978V6EH0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const firestore = getFirestore(app);
+
+    const container = document.getElementById("orders-container");
+    const printArea = document.getElementById("printArea").querySelector("tbody");
+
+    let ordersCache = [];
+
+    async function fetchSubmittedOrders() {
+      container.innerHTML = "Loading orders...";
+      try {
+        const ordersRef = collection(firestore, "orders");
+        const q = query(ordersRef, orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          container.innerHTML = "<p>No orders found.</p>";
+          return;
+        }
+
+        ordersCache = []; // reset cache
+
+        const ordersHTML = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const id = docSnap.id;
+          ordersCache.push({ id, ...data });
+
+          const createdAt = data.createdAt?.toDate?.() || null;
+          const formattedDate = createdAt ? createdAt.toLocaleString() : "Unknown";
+
+          const accepted = data.accepted === true;
+
+          ordersHTML.push(`
+            <div class="order-card" data-id="${id}">
+              <p><strong>Product:</strong> ${data.product?.toUpperCase() || "N/A"}</p>
+              <p><strong>Quantity:</strong> ${data.quantity}</p>
+              ${data.size ? `<p><strong>Size:</strong> ${data.size}L</p>` : ""}
+              ${data.company ? `<p><strong>Company:</strong> ${data.company}</p>` : ""}
+              ${data.truckNumber ? `<p><strong>Truck No:</strong> ${data.truckNumber}</p>` : ""}
+              ${data.dprCode ? `<p><strong>DPR Code:</strong> ${data.dprCode}</p>` : ""}
+              ${data.email ? `<p><strong>Email:</strong> ${data.email}</p>` : ""}
+              <p><strong>Status:</strong> ${data.status || "pending"}</p>
+              <p><small><strong>Submitted:</strong> ${formattedDate}</small></p>
+              <div class="order-actions">
+                ${
+                  accepted
+                    ? `<span class="accepted-label">Accepted</span>`
+                    : `
+                    <button class="accept-btn">Accept</button>
+                    <button class="decline-btn">Decline</button>
+                    `
+                }
+              </div>
+            </div>
+          `);
+        });
+
+        container.innerHTML = ordersHTML.join("");
+
+        // Attach event listeners for buttons:
+        document.querySelectorAll(".accept-btn").forEach(btn => {
+          btn.addEventListener("click", async (e) => {
+            const orderCard = e.target.closest(".order-card");
+            const id = orderCard.getAttribute("data-id");
+            await acceptOrder(id);
+          });
+        });
+
+        document.querySelectorAll(".decline-btn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            const orderCard = e.target.closest(".order-card");
+            const id = orderCard.getAttribute("data-id");
+            declineOrder(id);
+          });
+        });
+
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="error">❌ Failed to load orders: ${err.message}</p>`;
+      }
+    }
+
+    async function acceptOrder(id) {
+      try {
+        const orderDocRef = doc(firestore, "orders", id);
+        // Update accepted field to true
+        await updateDoc(orderDocRef, { accepted: true });
+
+        alert("Order accepted.");
+
+        // Update print/export table
+        const order = ordersCache.find(o => o.id === id);
+        if (!order) return;
+
+        // If already in print area, don't duplicate
+        const exists = Array.from(printArea.children).some(tr => tr.dataset.id === id);
+        if (exists) return;
+
+        // Add accepted order row to print area
+        const row = document.createElement("tr");
+        row.dataset.id = id;
+        row.innerHTML = `
+          <td>${order.product?.toUpperCase() || "N/A"}</td>
+          <td>${order.quantity}</td>
+          <td>${order.size || ""}</td>
+          <td>${order.company || ""}</td>
+          <td>${order.truckNumber || ""}</td>
+          <td>${order.dprCode || ""}</td>
+          <td>${order.email || ""}</td>
+          <td>Accepted</td>
+          <td>${order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "Unknown"}</td>
+        `;
+        printArea.appendChild(row);
+
+        // Refresh list to update buttons and labels
+        fetchSubmittedOrders();
+
+      } catch (error) {
+        alert("Failed to accept order: " + error.message);
+      }
+    }
+
+    function declineOrder(id) {
+      alert(`Order with ID ${id} declined.`);
+      // You can extend this to update Firestore or remove the order if needed
+    }
+
+    // Theme toggle
+    document.getElementById("toggle-theme-btn").addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+    });
+
+    // Print accepted orders
+    document.getElementById("print-orders-btn").addEventListener("click", () => {
+      const printContainer = document.getElementById("printAreaContainer");
+      if (!printArea.hasChildNodes()) {
+        alert("No accepted orders to print.");
+        return;
+      }
+      const printContents = printContainer.innerHTML;
+      const originalContents = document.body.innerHTML;
+      document.body.innerHTML = printContents;
+      window.print();
+      document.body.innerHTML = originalContents;
+      fetchSubmittedOrders(); // reload after print
+    });
+
+    // Export accepted orders to CSV
+    document.getElementById("export-orders-btn").addEventListener("click", () => {
+      if (!printArea.hasChildNodes()) {
+        alert("No accepted orders to export.");
+        return;
+      }
+      const rows = Array.from(printArea.querySelectorAll("tr"));
+      const csv = rows.map(row => {
+        const cols = Array.from(row.querySelectorAll("td"));
+        return cols.map(col => `"${col.innerText}"`).join(",");
+      }).join("\n");
+
+      const header = ['Product','Quantity','Size (L)','Company','Truck No','DPR Code','Email','Status','Submitted'].join(",");
+      const csvWithHeader = header + "\n" + csv;
+
+      const blob = new Blob([csvWithHeader], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "accepted_orders.csv");
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    fetchSubmittedOrders();
+
+  </script>
+</body>
+</html>

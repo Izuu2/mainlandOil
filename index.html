@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vendor's Portal</title>
+ <link rel="stylesheet" href="assets/CSS/styles.css">
+   <link rel="stylesheet" href="assets/CSS/header.css">
+</head>
+<body>
+<header>
+  <img src="assets/images/Mainland LOGO with text under- 326x154.png" alt="Company Logo" class="logo">
+  <div class="site-title">Vendor's Portal</div>
+  <div class="frame-line-top-left"></div>
+<div class="frame-line-top-right"></div>
+<div class="frame-line-vertical-left"></div>
+<div class="frame-line-vertical-right"></div>
+</header>
+
+<nav>
+  <div class="menu-toggle" onclick="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a href="#">Home</a>
+    <a href="#">FAQs</a>
+    <a href="#">Corporate Website</a>
+    <a href="#">Policies</a>
+    <a href="#">Contact us</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="description">
+    <p>
+      With well over 500 Mainland Oil and Gas Owned, dealer-assisted, and dealer-developed retail outlets spread across the country...
+    </p>
+    <p>
+      We are a foremost indigenous major marketer of refined petroleum products...
+    </p>
+  </div>
+
+  <div class="form-section">
+<button id="startRegistration">New Vendor Registration</button>
+<button onclick="window.location.href='login.html'">Vendor Login</button>
+    <p><strong>Please enter your form number below if you did not complete a previous registration</strong></p>
+    <input type="text" placeholder="Enter your Form Number...">
+    <br>
+    <a href="#">What's my Form Number?</a>
+    <br>
+    <!-- <button>Continue Registration</button> -->
+  </div>
+</div>
+<div id="registrationForm" style="display:none;"></div>
+<footer>
+  &copy; 2025 Mainland Oil and Gas. All rights reserved.
+</footer>
+<script src="assets/JS/script.js"></script>
+<script>
+  function toggleMenu() {
+    const navLinks = document.getElementById('navLinks');
+    navLinks.classList.toggle('active');
+  }
+</script>
+</body>
+</html>

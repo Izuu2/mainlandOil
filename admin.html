@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update Prices - Mainland Oil & Gas</title>
+  <link rel="stylesheet" href="assets/CSS/header.css">
+  <style>
+    :root {
+      --green: #a7cd3a;
+      --red: #ee1e26;
+      --bg-light: #f9f9f9;
+      --bg-dark: #222;
+      --text-dark: #333;
+      --text-light: #eee;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgb(0 0 0 / 0.1);
+    }
+
+    .theme-toggle {
+      text-align: right;
+      margin-bottom: 15px;
+    }
+
+    .theme-toggle button {
+      background: var(--green);
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 25px;
+    }
+
+    form label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-dark);
+    }
+
+    form input[type="number"] {
+      width: 120px;
+      padding: 8px 12px;
+      border: 2px solid var(--green);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    form button[type="submit"] {
+      display: block;
+      width: 100%;
+      padding: 12px 0;
+      background-color: var(--red);
+      border: none;
+      border-radius: 30px;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    #saving-message, #success-message {
+      margin-top: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    #saving-message { color: var(--green); }
+    #success-message { color: var(--red); }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="assets/images/Mainland LOGO with text under- 326x154.png" alt="Company Logo" class="logo">
+    <div class="site-title">Vendor's Portal</div>
+    <div class="frame-line-top-left"></div>
+    <div class="frame-line-top-right"></div>
+    <div class="frame-line-vertical-left"></div>
+    <div class="frame-line-vertical-right"></div>
+  </header>
+
+  <nav>
+    <div class="menu-toggle" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="#">FAQs</a>
+      <a href="#">Corporate Website</a>
+      <a href="#">Policies</a>
+      <a href="#">Contact us</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="theme-toggle">
+      <button id="toggle-theme">🌙 Dark Mode</button>
+    </div>
+    <h2>Update Prices</h2>
+    <form id="price-form">
+      <label>PMS Price (₦):
+        <input type="number" id="pms" min="0" step="1" required>
+      </label>
+
+      <label>Lubricant 1L (₦):
+        <input type="number" id="lube1" min="0" step="1" required>
+      </label>
+      <label>Lubricant 2L (₦):
+        <input type="number" id="lube2" min="0" step="1" required>
+      </label>
+      <label>Lubricant 4L (₦):
+        <input type="number" id="lube4" min="0" step="1" required>
+      </label>
+      <label>Lubricant 8L (₦):
+        <input type="number" id="lube8" min="0" step="1" required>
+      </label>
+      <label>Lubricant 25L (₦):
+        <input type="number" id="lube25" min="0" step="1" required>
+      </label>
+
+      <button type="submit">Update Prices</button>
+      <p id="saving-message"></p>
+      <p id="success-message"></p>
+    </form>
+  </div>
+
+  <footer>
+    &copy; 2025 Mainland Oil and Gas. All rights reserved.
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPhMXOil0T4TuRZcnhFhKDNXz8UfD5j0g",
+      authDomain: "mainland-oil-gas.firebaseapp.com",
+      projectId: "mainland-oil-gas",
+      storageBucket: "mainland-oil-gas.appspot.com",
+      messagingSenderId: "777899969990",
+      appId: "1:777899969990:web:659db45ddc039d957776c7",
+      measurementId: "G-9F978V6EH0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // DOM Elements
+    const priceForm = document.getElementById('price-form');
+    const savingMsg = document.getElementById('saving-message');
+    const successMsg = document.getElementById('success-message');
+    const themeBtn = document.getElementById('toggle-theme');
+
+    // Load current prices
+    function loadCurrentPrices() {
+      const pricesRef = ref(db, 'prices');
+      
+      onValue(pricesRef, (snapshot) => {
+        const prices = snapshot.val();
+        if (prices) {
+          document.getElementById('pms').value = prices.pms || '';
+          document.getElementById('lube1').value = prices.lubricant?.['1'] || '';
+          document.getElementById('lube2').value = prices.lubricant?.['2'] || '';
+          document.getElementById('lube4').value = prices.lubricant?.['4'] || '';
+          document.getElementById('lube8').value = prices.lubricant?.['8'] || '';
+          document.getElementById('lube25').value = prices.lubricant?.['25'] || '';
+        }
+      });
+    }
+
+    // Save new prices
+    priceForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      savingMsg.textContent = "Saving prices...";
+      successMsg.textContent = "";
+      
+      const newPrices = {
+        pms: parseFloat(document.getElementById('pms').value),
+        lubricant: {
+          '1': parseFloat(document.getElementById('lube1').value),
+          '2': parseFloat(document.getElementById('lube2').value),
+          '4': parseFloat(document.getElementById('lube4').value),
+          '8': parseFloat(document.getElementById('lube8').value),
+          '25': parseFloat(document.getElementById('lube25').value)
+        }
+      };
+      
+      set(ref(db, 'prices'), newPrices)
+        .then(() => {
+          savingMsg.textContent = "";
+          successMsg.textContent = "Prices updated successfully!";
+          setTimeout(() => successMsg.textContent = "", 3000);
+        })
+        .catch((error) => {
+          savingMsg.textContent = "";
+          successMsg.textContent = `Error: ${error.message}`;
+        });
+    });
+
+    // Toggle theme
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      themeBtn.textContent = document.body.classList.contains('dark-mode') 
+        ? "☀️ Light Mode" 
+        : "🌙 Dark Mode";
+    });
+
+    // Initialize
+    loadCurrentPrices();
+
+    // Menu toggle (from your original code)
+    function toggleMenu() {
+      const navLinks = document.getElementById("navLinks");
+      navLinks.classList.toggle('active');
+    }
+    window.toggleMenu = toggleMenu;
+    
+  </script>
+</body>
+</html>

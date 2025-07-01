@@ -1,0 +1,94 @@
+.body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9fafb;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Headers */
+h1, h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+/* Buttons */
+button {
+  background-color: #8bbf2d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  margin: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #729d25;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px;
+  margin: 10px 0;
+  border: 2px solid #8bbf2d;
+  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus {
+  border-color: #ee1e26;
+  box-shadow: 0 0 5px rgba(238, 30, 38, 0.5);
+}
+
+/* Links */
+a {
+  color: #8bbf2d;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #ee1e26;
+  text-decoration: underline;
+}
+
+/* Messages */
+.message {
+  margin-top: 15px;
+  padding: 10px;
+  color: #ee1e26;
+  font-weight: bold;
+}
+
+/* Password strength indicator */
+#password-strength {
+  margin-top: -8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #8bbf2d;
+}
+
+/* Responsive Layout */
+@media (max-width: 500px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: 90%;
+  }
+
+  button {
+    width: 90%;
+  }
+}

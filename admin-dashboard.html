@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mainland Oil & Gas - Admin Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #ee1e26;
+      --secondary: #a7cd3a;
+      --dark: #222;
+      --light: #f9f9f9;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    body {
+      background-color: var(--light);
+      color: var(--dark);
+      line-height: 1.6;
+    }
+    
+    /* Loader Styles */
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .spinner {
+      border: 5px solid rgba(0,0,0,0.1);
+      border-top: 5px solid var(--primary);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Container Styles */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      display: none; /* Hidden until auth completes */
+    }
+    
+    /* Header Styles */
+    header {
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 15px 0;
+      margin-bottom: 30px;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .logo {
+      height: 50px;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    
+    /* Navigation Styles */
+    nav {
+      background-color: var(--dark);
+      padding: 10px 0;
+    }
+    
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      list-style: none;
+    }
+    
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+    
+    .nav-links a:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+    
+    /* Dashboard Sections */
+    .dashboard-section {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      color: var(--primary);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eee;
+    }
+    
+    /* Price Cards */
+    .price-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .price-card {
+      border: 2px solid var(--secondary);
+      border-radius: 8px;
+      padding: 20px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .price-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .price-card h3 {
+      color: var(--secondary);
+      margin-bottom: 15px;
+    }
+    
+    .price-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    /* Forms */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #c3141b;
+    }
+    
+    .btn-secondary {
+      background-color: var(--secondary);
+    }
+    
+    .btn-secondary:hover {
+      background-color: #8bb230;
+    }
+    
+    /* Alerts */
+    .alert {
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .alert-error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    /* Tables */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .table th, .table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .table th {
+      background-color: #f5f5f5;
+      font-weight: 500;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+    }
+    
+    .tab.active {
+      border-bottom-color: var(--primary);
+      font-weight: 500;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1001;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-title {
+      margin-bottom: 20px;
+      color: var(--primary);
+    }
+    
+    .close-modal {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .price-cards {
+        grid-template-columns: 1fr;
+      }
+      
+      .nav-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <p>Verifying authentication...</p>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('auth-modal')">&times;</span>
+      <h3 class="modal-title">Authentication Required</h3>
+      <div id="login-form">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" class="form-control" placeholder="admin@mainland.com">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••">
+        </div>
+        <button class="btn" onclick="login()">Login</button>
+        <div id="login-message" class="alert" style="display: none; margin-top: 15px;"></div>
+      </div>
+      <div id="2fa-form" style="display: none;">
+        <div class="form-group">
+          <label for="verification-code">Enter 2FA Code</label>
+          <input type="text" id="verification-code" class="form-control" placeholder="123456">
+        </div>
+        <button class="btn" onclick="verify2FA()">Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App (hidden until authenticated) -->
+  <div id="app-container" style="display: none;">
+    <header>
+      <div class="header-content">
+        <img src="assets/images/Mainland_LOGO.png" alt="Mainland Logo" class="logo">
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">AD</div>
+          <div>
+            <div id="user-name">Admin User</div>
+            <small id="user-role">System Administrator</small>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#" class="nav-link active" data-section="dashboard">Dashboard</a></li>
+        <li><a href="#" class="nav-link" data-section="price-management">Price Management</a></li>
+        <li><a href="#" class="nav-link" data-section="user-management">User Management</a></li>
+        <li><a href="#" class="nav-link" data-section="activity-logs">Activity Logs</a></li>
+        <li><a href="#" onclick="logout()">Logout</a></li>
+      </ul>
+    </nav>
+
+    <div class="container" id="main-container">
+      <!-- Dashboard Section -->
+      <div id="dashboard-section" class="dashboard-section">
+        <h2 class="section-title">Dashboard Overview</h2>
+        <div class="alert" id="status-message" style="display: none;"></div>
+        
+        <div class="price-cards">
+          <div class="price-card">
+            <h3>PMS (Petrol)</h3>
+            <div class="price-value" id="current-pms-price">₦---</div>
+            <small>Last updated: <span id="pms-update-time">--/--/----</span></small>
+          </div>
+          <div class="price-card">
+            <h3>Lubricant (1L)</h3>
+            <div class="price-value" id="current-lube1-price">₦---</div>
+            <small>Last updated: <span id="lube1-update-time">--/--/----</span></small>
+          </div>
+          <div class="price-card">
+            <h3>Lubricant (4L)</h3>
+            <div class="price-value" id="current-lube4-price">₦---</div>
+            <small>Last updated: <span id="lube4-update-time">--/--/----</span></small>
+          </div>
+          <div class="price-card">
+            <h3>Lubricant (25L)</h3>
+            <div class="price-value" id="current-lube25-price">₦---</div>
+            <small>Last updated: <span id="lube25-update-time">--/--/----</span></small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price Management Section -->
+      <div id="price-management-section" class="dashboard-section" style="display: none;">
+        <h2 class="section-title">Price Management</h2>
+        <div class="tabs">
+          <div class="tab active" data-tab="current-prices">Current Prices</div>
+          <div class="tab" data-tab="update-prices">Update Prices</div>
+          <div class="tab" data-tab="approvals">Pending Approvals</div>
+        </div>
+        
+        <div id="current-prices-tab" class="tab-content">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price (₦)</th>
+                <th>Last Updated</th>
+                <th>Updated By</th>
+              </tr>
+            </thead>
+            <tbody id="price-table-body">
+              <!-- Filled by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div id="update-prices-tab" class="tab-content" style="display: none;">
+          <form id="price-update-form">
+            <div class="form-group">
+              <label for="new-pms-price">PMS Price (₦)</label>
+              <input type="number" id="new-pms-price" class="form-control" min="0" step="1">
+            </div>
+            
+            <h4 style="margin: 20px 0 10px;">Lubricants</h4>
+            
+            <div class="form-group">
+              <label for="new-lube1-price">1L Price (₦)</label>
+              <input type="number" id="new-lube1-price" class="form-control" min="0" step="1">
+            </div>
+            
+            <div class="form-group">
+              <label for="new-lube4-price">4L Price (₦)</label>
+              <input type="number" id="new-lube4-price" class="form-control" min="0" step="1">
+            </div>
+            
+            <div class="form-group">
+              <label for="new-lube25-price">25L Price (₦)</label>
+              <input type="number" id="new-lube25-price" class="form-control" min="0" step="1">
+            </div>
+            
+            <div class="form-group">
+              <label for="update-reason">Reason for Update</label>
+              <textarea id="update-reason" class="form-control" rows="3" required></textarea>
+            </div>
+            
+            <button type="submit" class="btn">Submit for Approval</button>
+            <div id="price-update-message" class="alert" style="display: none; margin-top: 15px;"></div>
+          </form>
+        </div>
+        
+        <div id="approvals-tab" class="tab-content" style="display: none;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Requested By</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="approvals-table-body">
+              <!-- Filled by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- User Management Section -->
+      <div id="user-management-section" class="dashboard-section" style="display: none;">
+        <h2 class="section-title">User Management</h2>
+        
+        <div class="alert alert-info">
+          <strong>Note:</strong> Only System Administrators can modify user roles.
+        </div>
+        
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="user-table-body">
+            <!-- Filled by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Activity Logs Section -->
+      <div id="activity-logs-section" class="dashboard-section" style="display: none;">
+        <h2 class="section-title">Activity Logs</h2>
+        
+        <div class="form-group" style="max-width: 300px;">
+          <label for="log-filter">Filter Logs</label>
+          <select id="log-filter" class="form-control">
+            <option value="all">All Activities</option>
+            <option value="price_update">Price Updates</option>
+            <option value="user_management">User Management</option>
+            <option value="system">System Events</option>
+          </select>
+        </div>
+        
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Details</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody id="activity-table-body">
+            <!-- Filled by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approval Modal -->
+  <div id="approval-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal('approval-modal')">&times;</span>
+      <h3 class="modal-title">Review Price Changes</h3>
+      <div id="approval-details">
+        <!-- Filled by JavaScript -->
+      </div>
+      <div style="margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="approveChanges()">Approve</button>
+        <button class="btn" onclick="rejectChanges()" style="background-color: var(--danger); margin-left: 10px;">Reject</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase and App Script -->
+  <script type="module">
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPhMXOil0T4TuRZcnhFhKDNXz8UfD5j0g",
+      authDomain: "mainland-oil-gas.firebaseapp.com",
+      databaseURL: "https://mainland-oil-gas-default-rtdb.firebaseio.com",
+      projectId: "mainland-oil-gas",
+      storageBucket: "mainland-oil-gas.appspot.com",
+      messagingSenderId: "777899969990",
+      appId: "1:777899969990:web:659db45ddc039d957776c7",
+      measurementId: "G-9F978V6EH0"
+    };
+
+    // Initialize Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getDatabase, 
+      ref, 
+      set, 
+      get, 
+      push, 
+      onValue,
+      update,
+      remove
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    // Global Variables
+    let currentUser = null;
+    let isAdmin = false;
+    let isSuperAdmin = false;
+    let currentApprovalId = null;
+
+    // DOM Elements
+    const loader = document.getElementById('loader');
+    const appContainer = document.getElementById('app-container');
+    const authModal = document.getElementById('auth-modal');
+    const loginForm = document.getElementById('login-form');
+    const twoFAForm = document.getElementById('2fa-form');
+    const loginMessage = document.getElementById('login-message');
+
+    // Initialize Application
+  function initApp() {
+  // Check auth state - simplified for testing
+  currentUser = {
+    uid: 'test-user',
+    email: document.getElementById('login-email').value || 'test@example.com',
+    multiFactor: { enrolledFactors: [] }
+  };
+  
+  checkUserRoles(currentUser.uid);
+  setupUI();
+}
+
+    // Check user roles (admin/super admin)
+    async function checkUserRoles(uid) {
+  // Temporarily allow all logged-in users to access
+  isAdmin = true;
+  isSuperAdmin = true;
+  return true;
+}
+    // Setup UI based on user role
+    function setupUI() {
+      // Update user info
+      document.getElementById('user-avatar').textContent = 
+        currentUser.email.charAt(0).toUpperCase();
+      document.getElementById('user-name').textContent = currentUser.email;
+      document.getElementById('user-role').textContent = 
+        isSuperAdmin ? 'Super Administrator' : 'Administrator';
+      
+      // Load data
+      loadPrices();
+      loadUsers();
+      loadActivityLogs();
+      loadPendingApprovals();
+      
+      // Hide loader and show app
+      loader.style.display = 'none';
+      appContainer.style.display = 'block';
+      document.getElementById('main-container').style.display = 'block';
+    }
+
+    // Show authentication modal
+    function showAuthModal() {
+      authModal.style.display = 'flex';
+      loginForm.style.display = 'block';
+      twoFAForm.style.display = 'none';
+      loginMessage.style.display = 'none';
+    }
+
+    // Close modal
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Login function
+    async function login() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  
+  if (!email || !password) {
+    showLoginMessage('Please enter both email and password', 'error');
+    return;
+  }
+  
+  try {
+    showLoginMessage('Authenticating...', 'info');
+    
+    // Bypass actual Firebase auth for testing
+    authModal.style.display = 'none';
+    initApp();
+    
+  } catch (error) {
+    showLoginMessage(error.message, 'error');
+  }
+}
+
+    // Verify 2FA (simplified for demo)
+    function verify2FA() {
+      const code = document.getElementById('verification-code').value;
+      
+      if (!code || code.length !== 6) {
+        showLoginMessage('Please enter a valid 6-digit code', 'error');
+        return;
+      }
+      
+      // In a real app, you would verify with Firebase Auth
+      showLoginMessage('Verifying 2FA code...', 'info');
+      
+      setTimeout(() => {
+        authModal.style.display = 'none';
+        initApp();
+      }, 1000);
+    }
+
+    // Show login message
+    function showLoginMessage(message, type) {
+      loginMessage.textContent = message;
+      loginMessage.className = `alert alert-${type}`;
+      loginMessage.style.display = 'block';
+    }
+
+    // Logout function
+    function logout() {
+      signOut(auth).then(() => {
+        window.location.reload();
+      });
+    }
+
+    // Show status message
+    function showMessage(message, type) {
+      const statusEl = document.getElementById('status-message');
+      statusEl.textContent = message;
+      statusEl.className = `alert alert-${type}`;
+      statusEl.style.display = 'block';
+      
+      setTimeout(() => {
+        statusEl.style.display = 'none';
+      }, 5000);
+    }
+
+    // Load current prices
+    function loadPrices() {
+      const pricesRef = ref(db, 'prices');
+      
+      onValue(pricesRef, (snapshot) => {
+        const prices = snapshot.val();
+        if (prices) {
+          // Update dashboard cards
+          document.getElementById('current-pms-price').textContent = `₦${prices.pms?.toLocaleString() || 'N/A'}`;
+          document.getElementById('current-lube1-price').textContent = `₦${prices.lubricant?.['1']?.toLocaleString() || 'N/A'}`;
+          document.getElementById('current-lube4-price').textContent = `₦${prices.lubricant?.['4']?.toLocaleString() || 'N/A'}`;
+          document.getElementById('current-lube25-price').textContent = `₦${prices.lubricant?.['25']?.toLocaleString() || 'N/A'}`;
+          
+          // Update price table
+          updatePriceTable(prices);
+        }
+      });
+    }
+
+    // Update price table
+    function updatePriceTable(prices) {
+      const tableBody = document.getElementById('price-table-body');
+      tableBody.innerHTML = '';
+      
+      if (!prices) return;
+      
+      const products = [
+        { name: 'PMS (Petrol)', key: 'pms' },
+        { name: 'Lubricant (1L)', key: 'lubricant/1' },
+        { name: 'Lubricant (4L)', key: 'lubricant/4' },
+        { name: 'Lubricant (25L)', key: 'lubricant/25' }
+      ];
+      
+      products.forEach(product => {
+        const price = getNestedValue(prices, product.key);
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+          <td>${product.name}</td>
+          <td>₦${price?.toLocaleString() || 'N/A'}</td>
+          <td>${price ? new Date().toLocaleDateString() : 'N/A'}</td>
+          <td>${price ? currentUser.email : 'N/A'}</td>
+        `;
+        
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Helper to get nested values
+    function getNestedValue(obj, path) {
+      return path.split('/').reduce((o, p) => (o || {})[p], obj);
+    }
+
+    // Load users
+    async function loadUsers() {
+      const usersRef = ref(db, 'users');
+      const snapshot = await get(usersRef);
+      
+      if (snapshot.exists()) {
+        const users = snapshot.val();
+        const tableBody = document.getElementById('user-table-body');
+        tableBody.innerHTML = '';
+        
+        Object.entries(users).forEach(([uid, user]) => {
+          const row = document.createElement('tr');
+          
+          row.innerHTML = `
+            <td>${user.name || 'N/A'}</td>
+            <td>${user.email}</td>
+            <td>${user.role || 'user'}</td>
+            <td>${user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}</td>
+            <td>
+              ${isSuperAdmin ? `
+                <select onchange="updateUserRole('${uid}', this.value)" class="form-control" style="width: 150px;">
+                  <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                  <option value="pricing" ${user.role === 'pricing' ? 'selected' : ''}>Pricing Manager</option>
+                  <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrator</option>
+                </select>
+              ` : user.role || 'user'}
+            </td>
+          `;
+          
+          tableBody.appendChild(row);
+        });
+      }
+    }
+
+    // Update user role
+    async function updateUserRole(uid, newRole) {
+      if (!isSuperAdmin) return;
+      
+      try {
+        await set(ref(db, `users/${uid}/role`), newRole);
+        await logActivity('ROLE_UPDATE', {
+          targetUser: uid,
+          newRole: newRole
+        });
+        
+        showMessage(`User role updated to ${newRole}`, 'success');
+        loadUsers();
+      } catch (error) {
+        showMessage(`Failed to update role: ${error.message}`, 'error');
+      }
+    }
+
+    // Load activity logs
+    async function loadActivityLogs(filter = 'all') {
+      const logsRef = ref(db, 'activity_logs');
+      const snapshot = await get(logsRef);
+      
+      if (snapshot.exists()) {
+        const logs = snapshot.val();
+        const tableBody = document.getElementById('activity-table-body');
+        tableBody.innerHTML = '';
+        
+        Object.entries(logs)
+          .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))
+          .forEach(([id, log]) => {
+            if (filter !== 'all' && log.actionType !== filter) return;
+            
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+              <td>${new Date(log.timestamp).toLocaleString()}</td>
+              <td>${log.userEmail || 'System'}</td>
+              <td>${formatActionType(log.actionType)}</td>
+              <td>${formatActionDetails(log)}</td>
+              <td>${log.ipAddress || 'N/A'}</td>
+            `;
+            
+            tableBody.appendChild(row);
+          });
+      }
+    }
+
+    // Format action type
+    function formatActionType(type) {
+      const types = {
+        'PRICE_UPDATE': 'Price Update',
+        'ROLE_UPDATE': 'Role Change',
+        'USER_LOGIN': 'User Login',
+        'APPROVAL_REQUEST': 'Approval Request',
+        'APPROVAL_APPROVED': 'Approval Approved',
+        'APPROVAL_REJECTED': 'Approval Rejected'
+      };
+      
+      return types[type] || type;
+    }
+
+    // Format action details
+    function formatActionDetails(log) {
+      if (log.actionType === 'PRICE_UPDATE') {
+        return `Updated prices (${Object.keys(log.details.newPrices).join(', ')})`;
+      }
+      
+      if (log.actionType === 'ROLE_UPDATE') {
+        return `Changed role for user ${log.details.targetUser} to ${log.details.newRole}`;
+      }
+      
+      return JSON.stringify(log.details);
+    }
+
+    // Load pending approvals
+    async function loadPendingApprovals() {
+      if (!isSuperAdmin) return;
+      
+      const approvalsRef = ref(db, 'price_approvals');
+      const snapshot = await get(approvalsRef);
+      
+      if (snapshot.exists()) {
+        const approvals = snapshot.val();
+        const tableBody = document.getElementById('approvals-table-body');
+        tableBody.innerHTML = '';
+        
+        Object.entries(approvals)
+          .filter(([id, approval]) => approval.status === 'pending')
+          .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))
+          .forEach(([id, approval]) => {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+              <td>${id.substring(0, 8)}</td>
+              <td>${approval.requestedByEmail || approval.requestedBy}</td>
+              <td>${new Date(approval.timestamp).toLocaleString()}</td>
+              <td><span class="badge" style="background-color: orange; color: white; padding: 3px 6px; border-radius: 3px;">Pending</span></td>
+              <td><button class="btn" onclick="reviewApproval('${id}')" style="padding: 5px 10px; font-size: 14px;">Review</button></td>
+            `;
+            
+            tableBody.appendChild(row);
+          });
+      }
+    }
+
+    // Review approval
+    async function reviewApproval(approvalId) {
+      currentApprovalId = approvalId;
+      
+      const approvalRef = ref(db, `price_approvals/${approvalId}`);
+      const snapshot = await get(approvalRef);
+      
+      if (snapshot.exists()) {
+        const approval = snapshot.val();
+        const detailsEl = document.getElementById('approval-details');
+        
+        detailsEl.innerHTML = `
+          <p><strong>Requested By:</strong> ${approval.requestedByEmail || approval.requestedBy}</p>
+          <p><strong>Requested At:</strong> ${new Date(approval.timestamp).toLocaleString()}</p>
+          <p><strong>Reason:</strong> ${approval.reason || 'No reason provided'}</p>
+          
+          <h4 style="margin-top: 20px;">Proposed Changes:</h4>
+          <table class="table" style="margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Current Price</th>
+                <th>New Price</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(approval.newPrices).map(([product, price]) => `
+                <tr>
+                  <td>${product === 'pms' ? 'PMS' : `Lubricant ${product.includes('/') ? product.split('/')[1] + 'L' : product}`}</td>
+                  <td>₦${getCurrentPrice(product)?.toLocaleString() || 'N/A'}</td>
+                  <td>₦${price?.toLocaleString() || 'N/A'}</td>
+                  <td style="color: ${price > getCurrentPrice(product) ? 'red' : 'green'}">
+                    ${price > getCurrentPrice(product) ? '↑' : '↓'} 
+                    ${Math.abs(price - getCurrentPrice(product))?.toLocaleString() || '0'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+        
+        document.getElementById('approval-modal').style.display = 'flex';
+      }
+    }
+
+    // Get current price
+    function getCurrentPrice(productKey) {
+      // This would normally come from your current prices
+      // For demo, we'll return some defaults
+      const defaults = {
+        'pms': 650,
+        'lubricant/1': 1200,
+        'lubricant/4': 4500,
+        'lubricant/25': 18000
+      };
+      
+      return defaults[productKey] || 0;
+    }
+
+    // Approve changes
+    async function approveChanges() {
+      if (!currentApprovalId || !isSuperAdmin) return;
+      
+      try {
+        const approvalRef = ref(db, `price_approvals/${currentApprovalId}`);
+        const snapshot = await get(approvalRef);
+        
+        if (snapshot.exists()) {
+          const approval = snapshot.val();
+          
+          // Update prices
+          await set(ref(db, 'prices'), approval.newPrices);
+          
+          // Update approval status
+          await update(approvalRef, {
+            status: 'approved',
+            approvedBy: currentUser.uid,
+            approvedAt: new Date().toISOString()
+          });
+          
+          // Log activity
+          await logActivity('APPROVAL_APPROVED', {
+            approvalId: currentApprovalId,
+            prices: approval.newPrices
+          });
+          
+          showMessage('Price changes approved and applied', 'success');
+          closeModal('approval-modal');
+          loadPendingApprovals();
+          loadPrices();
+        }
+      } catch (error) {
+        showMessage(`Failed to approve changes: ${error.message}`, 'error');
+      }
+    }
+
+    // Reject changes
+    async function rejectChanges() {
+      if (!currentApprovalId || !isSuperAdmin) return;
+      
+      try {
+        const approvalRef = ref(db, `price_approvals/${currentApprovalId}`);
+        
+        // Update approval status
+        await update(approvalRef, {
+          status: 'rejected',
+          rejectedBy: currentUser.uid,
+          rejectedAt: new Date().toISOString()
+        });
+        
+        // Log activity
+        await logActivity('APPROVAL_REJECTED', {
+          approvalId: currentApprovalId
+        });
+        
+        showMessage('Price changes rejected', 'success');
+        closeModal('approval-modal');
+        loadPendingApprovals();
+      } catch (error) {
+        showMessage(`Failed to reject changes: ${error.message}`, 'error');
+      }
+    }
+
+    // Log activity
+    async function logActivity(actionType, details = {}) {
+      try {
+        // Get IP address
+        const ip = await fetch('https://api.ipify.org?format=json')
+          .then(res => res.json())
+          .then(data => data.ip)
+          .catch(() => 'unknown');
+        
+        await push(ref(db, 'activity_logs'), {
+          actionType,
+          details,
+          userEmail: currentUser.email,
+          userId: currentUser.uid,
+          timestamp: new Date().toISOString(),
+          ipAddress: ip
+        });
+      } catch (error) {
+        console.error("Failed to log activity:", error);
+      }
+    }
+
+    // Setup event listeners
+function setupEventListeners() {
+  // Navigation - Fixed version
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Remove active class from all nav links
+      document.querySelectorAll('.nav-link').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // Add active class to clicked link
+      this.classList.add('active');
+      
+      // Hide all sections
+      document.querySelectorAll('.dashboard-section').forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      // Show the selected section
+      const sectionId = `${this.dataset.section}-section`;
+      const sectionToShow = document.getElementById(sectionId);
+      if (sectionToShow) {
+        sectionToShow.style.display = 'block';
+      }
+    });
+  });
+      
+// Tabs - Fixed version
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    const tabId = `${this.dataset.tab}-tab`;
+    
+    // Update active tab
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.remove('active');
+    });
+    this.classList.add('active');
+    
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    
+    // Show the selected tab content
+    const tabContentToShow = document.getElementById(tabId);
+    if (tabContentToShow) {
+      tabContentToShow.style.display = 'block';
+    }
+  });
+});
+      
+      // Price update form
+      document.getElementById('price-update-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const pmsPrice = parseFloat(document.getElementById('new-pms-price').value);
+        const lube1Price = parseFloat(document.getElementById('new-lube1-price').value);
+        const lube4Price = parseFloat(document.getElementById('new-lube4-price').value);
+        const lube25Price = parseFloat(document.getElementById('new-lube25-price').value);
+        const reason = document.getElementById('update-reason').value;
+        
+        if (!pmsPrice || !lube1Price || !lube4Price || !lube25Price || !reason) {
+          document.getElementById('price-update-message').textContent = 'Please fill all fields';
+          document.getElementById('price-update-message').className = 'alert alert-error';
+          document.getElementById('price-update-message').style.display = 'block';
+          return;
+        }
+        
+        try {
+          const newPrices = {
+            pms: pmsPrice,
+            lubricant: {
+              '1': lube1Price,
+              '4': lube4Price,
+              '25': lube25Price
+            }
+          };
+          
+          // For demo, we'll either apply directly or request approval
+          if (isSuperAdmin) {
+            await set(ref(db, 'prices'), newPrices);
+            await logActivity('PRICE_UPDATE', { newPrices });
+            showMessage('Prices updated successfully!', 'success');
+          } else {
+            const approvalId = push(ref(db, 'price_approvals')).key;
+            
+            await set(ref(db, `price_approvals/${approvalId}`), {
+              requestedBy: currentUser.uid,
+              requestedByEmail: currentUser.email,
+              newPrices,
+              reason,
+              status: 'pending',
+              timestamp: new Date().toISOString()
+            });
+            
+            await logActivity('APPROVAL_REQUEST', { 
+              approvalId,
+              newPrices,
+              reason 
+            });
+            
+            showMessage('Price update request submitted for approval', 'success');
+          }
+          
+          // Reset form
+          document.getElementById('price-update-form').reset();
+          document.getElementById('price-update-message').style.display = 'none';
+          
+          // Reload data
+          loadPendingApprovals();
+        } catch (error) {
+          document.getElementById('price-update-message').textContent = `Error: ${error.message}`;
+          document.getElementById('price-update-message').className = 'alert alert-error';
+          document.getElementById('price-update-message').style.display = 'block';
+        }
+      });
+      
+      // Log filter
+      document.getElementById('log-filter').addEventListener('change', (e) => {
+        loadActivityLogs(e.target.value);
+      });
+    }
+
+    // Make functions available globally
+    window.updateUserRole = updateUserRole;
+    window.reviewApproval = reviewApproval;
+    window.approveChanges = approveChanges;
+    window.rejectChanges = rejectChanges;
+    window.closeModal = closeModal;
+    window.login = login;
+    window.verify2FA = verify2FA;
+    window.logout = logout;
+
+    // Initialize the app
+    initApp();
+  </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Submitted Orders - Mainland Oil & Gas</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    h1 {
+      color: #a7cd3a;
+      text-align: center;
+    }
+
+    #orders-container {
+      max-width: 800px;
+      margin: auto;
+      margin-top: 2rem;
+    }
+
+    .order-card {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-left: 6px solid #a7cd3a;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .order-card p {
+      margin: 0.3rem 0;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Submitted Orders</h1>
+  <div id="orders-container" class="loading">Loading orders...</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      orderBy,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPhMXOil0T4TuRZcnhFhKDNXz8UfD5j0g",
+      authDomain: "mainland-oil-gas.firebaseapp.com",
+      projectId: "mainland-oil-gas",
+      storageBucket: "mainland-oil-gas.appspot.com",
+      messagingSenderId: "777899969990",
+      appId: "1:777899969990:web:659db45ddc039d957776c7",
+      measurementId: "G-9F978V6EH0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const firestore = getFirestore(app);
+
+    async function fetchSubmittedOrders() {
+      const container = document.getElementById("orders-container");
+      container.innerHTML = "Loading orders...";
+
+      try {
+        const ordersRef = collection(firestore, "orders");
+        const q = query(ordersRef, orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          container.innerHTML = "<p>No orders found.</p>";
+          return;
+        }
+
+        const ordersHTML = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const createdAt = data.createdAt?.toDate?.() || null;
+          const formattedDate = createdAt ? createdAt.toLocaleString() : "Unknown";
+
+          ordersHTML.push(`
+            <div class="order-card">
+              <p><strong>Product:</strong> ${data.product?.toUpperCase() || "N/A"}</p>
+              <p><strong>Quantity:</strong> ${data.quantity}</p>
+              ${data.size ? `<p><strong>Size:</strong> ${data.size}L</p>` : ""}
+              ${data.company ? `<p><strong>Company:</strong> ${data.company}</p>` : ""}
+              ${data.truckNumber ? `<p><strong>Truck No:</strong> ${data.truckNumber}</p>` : ""}
+              ${data.dprCode ? `<p><strong>DPR Code:</strong> ${data.dprCode}</p>` : ""}
+              ${data.email ? `<p><strong>Email:</strong> ${data.email}</p>` : ""}
+              <p><strong>Status:</strong> ${data.status || "pending"}</p>
+              <p><small><strong>Submitted:</strong> ${formattedDate}</small></p>
+            </div>
+          `);
+        });
+
+        container.innerHTML = ordersHTML.join("");
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="error">❌ Failed to load orders: ${err.message}</p>`;
+      }
+    }
+
+    fetchSubmittedOrders();
+  </script>
+</body>
+</html>
